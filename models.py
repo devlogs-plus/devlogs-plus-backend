@@ -8,8 +8,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     display_name = db.Column(db.String(100))
-    avatar_url = db.Column(db.string(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    avatar_url = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,12 +17,12 @@ class Project(db.Model):
     name = db.Column(db.String(200), nullable=False)
     short_description = db.Column(db.Text)
     demo_url = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow())
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class ProjectCollaborator(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('project.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     role = db.Column(db.String(20), default='owner')
 
 class Devlog(db.Model):

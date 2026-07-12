@@ -1,5 +1,5 @@
 from flask import Flask
-from extensions import db, login_manager
+from extensions import db, login_manager, bcrypt
 from config import Config
 
 def create_app():
@@ -8,6 +8,7 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
+    bcrypt.init_app(app)
 
     from blueprints.auth import auth_bp
     app.register_blueprint(auth_bp)
