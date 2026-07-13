@@ -58,3 +58,92 @@ def create_project():
     db.session.commit()
 
     return jsonify({'message': f'success! project {name} created!'}), 200
+
+@project_bp.route('/projects/<int:project_id>', methods=['GET'])
+def get_project(project_id):
+    project = Project.query.get(project_id)
+    return jsonify(
+        {
+            'id': project.id,
+            'owner_user_id': project.owner_user_id,
+            'name': project.name,
+            'short_description': project.short_description,
+            'demo_url': project.demo_url,
+            'created_at': project.created_at,
+            'updated_at': project.updated_at
+        }), 200
+
+@project_bp.route('/projects/<int:project_id>', methods=['PATCH'])
+@login_required
+def patch_project(project_id):
+    project = Project.query.get(project_id)
+    if current_user.id != project.owner_user_id:
+        return jsonify({'message': 'current user does not own project'}), 403
+    data = request.get_json()
+
+    name = data.get('name')
+    short_description = data.get('short_description')
+    demo_url = data.get('demo_url')
+
+    project.name = name
+    project.short_description = short_description
+    project.demo_url = demo_url
+
+    db.session.commit()
+    return jsonify({'message': f'project {name} updated!'}), 200
+
+@project_bp.route('/projects/<int:project_id>', methods=['DELETE'])
+@login_required
+def delete_project(project_id):
+    project = Project.query.get(project_id)
+    if current_user.id != project.owner_user_id:
+        return jsonify({'message': 'current user does not own project'}), 403
+    db.session.delete(project)
+    db.session.commit()
+
+    return jsonify({'message': 'project has been deleted'})
+
+@project_bp.route('/projects/<int:project_id>/collaborators', methods=['POST'])
+@login_required
+def add_collaborators(project_id):
+    data = request.get_json()
+    project = Project.query.get(project_id)
+    if current_user.id != project.owner_user_id:
+        return jsonify({'message': 'current user does not own project'}), 403
+
+    required_fields = ['user_id']
+    missing_fields = [
+        field for field in required_fields
+        if not data.get(field)
+    ]
+    if missing_fields:
+        return jsonify({
+            'error': f'Missing required fields: {", ".join(missing_fields)}'
+        }), 400
+
+    collaborator = ProjectCollaborator(
+        project_id=project_id,
+        user_id=data.get('user_id'),
+        role='collaborator'
+    )
+
+    db.session.add(collaborator)
+    db.session.commit()
+
+    return jsonify({'message': 'project collaborator added'}), 200
+
+@project_bp.route('/projects/<int:project_id>/collaborators/<int:user_id>', methods=['DELETE'])
+@login_required
+def remove_collaborator(project_id, user_id):
+    collaborator = ProjectCollaborator.query.filter_by(
+        project_id=project_id,
+        user_id=user_id
+    ).first()
+
+    if not collaborator:
+        return jsonify({'error': 'Collaborator not found'}), 404
+
+    db.session.delete(collaborator)
+    db.session.commit()
+
+    return jsonify({'message': 'Collaborator removed successfully'}), 200
