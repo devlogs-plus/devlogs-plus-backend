@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy.model import Model
+from flask_sqlalchemy.session import Session
 
 from extensions import db, login_manager, bcrypt
 from config import Config
@@ -22,6 +23,8 @@ def create_app():
 
     from blueprints.auth import auth_bp
     app.register_blueprint(auth_bp)
+    from blueprints.projects import project_bp
+    app.register_blueprint(project_bp)
 
     return app
 

@@ -1,16 +1,14 @@
 from flask import Blueprint, jsonify, request
-from flask_bcrypt import Bcrypt
 from flask_login import login_user, logout_user, login_required, current_user
 
-import app
 from models import User
-from extensions import db, bcrypt
+from extensions import db
 
 auth_bp = Blueprint('auth_bp', __name__)
 
 @auth_bp.route('/auth/register', methods=['POST'])
 def register():
-    data = request.get_json() or {}
+    data = request.get_json()
 
     required_fields = ['email', 'password', 'display_name']
     missing_fields = [
