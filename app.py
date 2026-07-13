@@ -1,4 +1,6 @@
 from flask import Flask
+from flask_sqlalchemy.model import Model
+
 from extensions import db, login_manager, bcrypt
 from config import Config
 
@@ -9,6 +11,14 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
+
+    from models import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            return User.query.get(int(user_id))
+        except (TypeError, ValueError):
+            return None
 
     from blueprints.auth import auth_bp
     app.register_blueprint(auth_bp)
