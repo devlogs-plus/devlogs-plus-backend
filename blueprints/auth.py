@@ -67,3 +67,13 @@ def login():
 def logout():
     logout_user()
     return jsonify({'message': 'successfully logged out'})
+
+@auth_bp.route('/auth/me', methods=['GET'])
+@login_required
+def me():
+    return jsonify({
+        'id': current_user.id,
+        'display_name': current_user.display_name,
+        'email': current_user.email,
+        'avatar_url': current_user.avatar_url
+    })
