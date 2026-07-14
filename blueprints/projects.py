@@ -63,6 +63,8 @@ def create_project():
 @project_bp.route('/projects/<int:project_id>', methods=['GET'])
 def get_project(project_id):
     project = Project.query.get(project_id)
+    if not project:
+        jsonify({'error': 'project not found'}), 404
     return jsonify(
         {
             'id': project.id,

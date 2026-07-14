@@ -60,3 +60,40 @@ def create_project(project_id):
     db.session.commit()
 
     return jsonify({'message': f'success, devlog {title} created!'}), 200
+
+@devlog_bp.route('/projects/<int:project_id>/devlogs/<int:devlog_id>', methods=['GET'])
+def get_devlog(project_id, devlog_id):
+    devlog = Devlog.query.get(devlog_id)
+    if not devlog:
+        return jsonify({'error': 'devlog not found'}), 404
+    return jsonify({
+        'devlogs': [
+            {
+                'id': devlog.id,
+                'project_id': devlog.project_id,
+                'author_user_id': devlog.author_user_id,
+                'title': devlog.title,
+                'body_markdown': devlog.body_markdown,
+                'published_at': devlog.published_at,
+                'created_at': devlog.created_at,
+                'updated_at': devlog.updated_at
+            }
+        ]
+    }), 200
+
+@devlog_bp.route('/projects/<int:project_id>/devlogs/<int:devlog_id>', methods=['PATCH'])
+@login_required
+@require_project_access
+def patch_devlog(project_id, devlog_id):
+    devlog = Devlog.query.get(devlog_id)
+    data = request.get_json()
+
+    title = data.get('title')
+    body_markdown = data.get('body_markdown')
+
+    devlog.title = title
+    devlog.body_markdown = body_markdown
+
+    db.session.commit()
+    return jsonify({'message': f'devlog {title} updated'}), 200
+
