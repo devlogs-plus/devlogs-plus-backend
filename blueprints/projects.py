@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import User, Project, ProjectCollaborator
+from models import Project, ProjectCollaborator
 
 project_bp = Blueprint('project_bp', __name__)
 

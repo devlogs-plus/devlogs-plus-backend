@@ -25,6 +25,8 @@ def create_app():
     app.register_blueprint(auth_bp)
     from blueprints.projects import project_bp
     app.register_blueprint(project_bp)
+    from blueprints.devlogs import devlog_bp
+    app.register_blueprint(devlog_bp)
 
     return app
 
