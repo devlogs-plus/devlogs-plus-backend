@@ -19,6 +19,7 @@ def get_projects():
                 'name': project.name,
                 'short_description': project.short_description,
                 'demo_url': project.demo_url,
+                'repo_url': project.repo_url,
                 'created_at': project.created_at,
                 'updated_at': project.updated_at
             }
@@ -46,12 +47,14 @@ def create_project():
     name = data.get('name')
     short_description = data.get('short_description')
     demo_url = data.get('demo_url')
+    repo_url = data.get('repo_url')
 
     new_project = Project(
         owner_user_id=owner_user_id,
         name=name,
         short_description=short_description,
-        demo_url=demo_url
+        demo_url=demo_url,
+        repo_url=repo_url
     )
 
     db.session.add(new_project)
@@ -69,6 +72,7 @@ def get_project(project_id):
             'name': project.name,
             'short_description': project.short_description,
             'demo_url': project.demo_url,
+            'repo_url': project.repo_url,
             'created_at': project.created_at,
             'updated_at': project.updated_at
         }), 200
@@ -84,10 +88,12 @@ def patch_project(project_id):
     name = data.get('name')
     short_description = data.get('short_description')
     demo_url = data.get('demo_url')
+    repo_url = data.get('repo_url')
 
     project.name = name
     project.short_description = short_description
     project.demo_url = demo_url
+    project.repo_url = repo_url
 
     db.session.commit()
     return jsonify({'message': f'project {name} updated!'}), 200

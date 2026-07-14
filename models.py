@@ -23,6 +23,7 @@ class Project(db.Model):
     name = db.Column(db.String(200), nullable=False)
     short_description = db.Column(db.Text)
     demo_url = db.Column(db.String(500))
+    repo_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
