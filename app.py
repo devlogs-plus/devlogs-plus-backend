@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_sqlalchemy.model import Model
 from flask_sqlalchemy.session import Session
 
@@ -8,6 +9,7 @@ from config import Config
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     db.init_app(app)
     login_manager.init_app(app)
