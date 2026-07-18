@@ -10,6 +10,11 @@ auth_bp = Blueprint('auth_bp', __name__)
 def register():
     data = request.get_json()
 
+    if not isinstance(data, dict):
+        return jsonify({
+            'error': 'Request body must be valid JSON'
+        }), 400
+
     required_fields = ['email', 'password', 'display_name']
     missing_fields = [
         field for field in required_fields
@@ -51,6 +56,11 @@ def login():
     data = request.json
     email = data.get('email')
     password = data.get('password')
+
+    if not isinstance(data, dict):
+        return jsonify({
+            'error': 'Request body must be valid JSON'
+        }), 400
 
     user = User.query.filter_by(email=email).first()
 
