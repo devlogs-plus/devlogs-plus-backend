@@ -9,11 +9,14 @@ from config import Config
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, origins=['https://localhost:5173'])
 
     from models import User
     @login_manager.user_loader
@@ -36,4 +39,7 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000,
+            ssl_context=('C:\\Certs\\localhost+2.pem',
+                         'C:\\Certs\\localhost+2-key.pem'),
+            debug=True)
