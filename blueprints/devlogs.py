@@ -131,3 +131,10 @@ def unpublish_devlog(project_id, devlog_id):
 
     db.session.commit()
     return jsonify({'message': f'devlog {title} unpublished'}), 200
+
+@devlog_bp.route('/users/devlogs/unpublished', methods=['GET'])
+@login_required
+def get_user_unpublished_devlogs():
+    devlogs = Devlog.query.filter_by(author_user_id=current_user.id).filter(Devlog.published_at.is_(None))
+
+    return jsonify({'devlogs': [devlog.to_dict() for devlog in devlogs]}), 200
