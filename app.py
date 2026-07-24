@@ -16,7 +16,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    CORS(app, supports_credentials=True, origins=['https://localhost:5173'])
+    CORS(app, supports_credentials=True, origins=Config.CORS_ORIGINS)
 
     from models import User
     @login_manager.user_loader
