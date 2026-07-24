@@ -61,7 +61,7 @@ def create_devlog(project_id):
     db.session.add(devlog)
     db.session.commit()
 
-    return jsonify({'message': f'success, devlog {title} created!'}), 200
+    return jsonify(devlog.to_dict()), 201
 
 @devlog_bp.route('/projects/<int:project_id>/devlogs/<int:devlog_id>', methods=['GET'])
 def get_devlog(project_id, devlog_id):

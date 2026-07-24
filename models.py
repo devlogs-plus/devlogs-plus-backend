@@ -41,3 +41,15 @@ class Devlog(db.Model):
     published_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'author_user_id': self.author_user_id,
+            'title': self.title,
+            'body_markdown': self.body_markdown,
+            'published_at': self.published_at,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
