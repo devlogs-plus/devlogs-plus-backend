@@ -127,6 +127,14 @@ def add_collaborators(project_id):
             'error': f'Missing required fields: {", ".join(missing_fields)}'
         }), 400
 
+    existing = ProjectCollaborator.query.filter_by(
+        project_id=project_id,
+        user_id=data.get('user_id')
+    ).first()
+
+    if existing:
+        return jsonify({'error': 'User is already a collaborator'}), 409
+
     collaborator = ProjectCollaborator(
         project_id=project_id,
         user_id=data.get('user_id'),
