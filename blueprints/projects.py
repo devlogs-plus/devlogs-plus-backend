@@ -153,3 +153,17 @@ def remove_collaborator(project_id, user_id):
     db.session.commit()
 
     return jsonify({'message': 'Collaborator removed successfully'}), 200
+
+@project_bp.route('/projects/<int:project_id>/collaborators', methods=['GET'])
+def get_project_collaborators(project_id):
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({'error': 'project not found'}), 404
+
+    collaborators = ProjectCollaborator.query.filter_by(project_id=project_id).all()
+    user_ids = [c.user_id for c in collaborators]
+
+    return jsonify({
+        'project_id': project_id,
+        'collaborator_user_id': user_ids
+    }), 200
