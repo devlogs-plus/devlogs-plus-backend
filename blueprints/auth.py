@@ -95,3 +95,19 @@ def get_user_by_id(user_id):
         'email:': user.email,
         'avatar_url': user.avatar_url
     })
+
+@auth_bp.route('/auth/me/edit', methods=['POST'])
+@login_required
+def edit_own_user():
+    data = request.json
+    display_name = data.get('display_name')
+    email = data.get('email')
+    avatar_url = data.get('avatar_url')
+
+    user = User.query.get(current_user.id)
+
+    if display_name: user.display_name = display_name
+    if email: user.email = email
+    if avatar_url: user.avatar_url = avatar_url
+
+    db.session.commit()
