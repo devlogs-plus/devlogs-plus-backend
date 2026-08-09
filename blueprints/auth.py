@@ -86,9 +86,23 @@ def me():
         'avatar_url': current_user.avatar_url
     })
 
-@auth_bp.route('/auth/get/<int:user_id>', methods=['GET'])
+@auth_bp.route('/auth/getuser/<int:user_id>', methods=['GET'])
 def get_user_by_id(user_id):
     user = User.query.filter_by(id=user_id).first()
+    return jsonify({
+        'id': user.id,
+        'display_name': user.display_name,
+        'email:': user.email,
+        'avatar_url': user.avatar_url
+    })
+
+@auth_bp.route('/auth/getuser', methods=['POST'])
+def get_user_by_email():
+    data = request.json
+    email = data.get('email')
+
+    user = User.query.filter_by(email=email).first()
+
     return jsonify({
         'id': user.id,
         'display_name': user.display_name,
