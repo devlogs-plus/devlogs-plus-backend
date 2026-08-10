@@ -125,3 +125,5 @@ def edit_own_user():
     if avatar_url: user.avatar_url = avatar_url
 
     db.session.commit()
+
+    return jsonify({'message': 'profile updated successfully'}), 200
