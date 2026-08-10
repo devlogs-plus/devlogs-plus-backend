@@ -92,7 +92,7 @@ def get_user_by_id(user_id):
     return jsonify({
         'id': user.id,
         'display_name': user.display_name,
-        'email:': user.email,
+        'email': user.email,
         'avatar_url': user.avatar_url
     })
 
