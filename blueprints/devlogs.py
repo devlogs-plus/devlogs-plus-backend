@@ -137,3 +137,40 @@ def get_user_unpublished_devlogs():
     devlogs = Devlog.query.filter_by(author_user_id=current_user.id).filter(Devlog.published_at.is_(None))
 
     return jsonify({'devlogs': [devlog.to_dict() for devlog in devlogs]}), 200
+
+@devlog_bp.route('/feed', methods=['GET'])
+def get_feed():
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=20, type=int)
+    per_page = min(max(1, per_page), 100)
+
+    q = db.session.query(Devlog, User, Project) \
+        .join(User, Devlog.author_user_id == User.id) \
+        .join(Project, Devlog.project_id == Project.id) \
+        .filter(Devlog.published_at.isnot(None)) \
+        .order_by(Devlog.published_at.desc(), Devlog.created_at.desc())
+
+    total = q.count()
+    items = q.limit(per_page).offset((page - 1) * per_page).all()
+
+    devlogs = []
+    for devlog, user, project in items:
+        d = devlog.to_dict()
+        d['author'] = {
+            'id': user.id,
+            'display_name': user.display_name,
+            'avatar_url': user.avatar_url
+        }
+        d['project'] = {
+            'id': project.id,
+            'name': project.name,
+            'short_description': project.short_description
+        }
+        devlogs.append(d)
+
+    return jsonify({
+        'total': total,
+        'page': page,
+        'per_page': per_page,
+        'devlogs': devlogs
+    }), 200
