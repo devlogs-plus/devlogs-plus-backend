@@ -155,18 +155,11 @@ def get_feed():
 
     devlogs = []
     for devlog, user, project in items:
-        d = devlog.to_dict()
-        d['author'] = {
-            'id': user.id,
-            'display_name': user.display_name,
-            'avatar_url': user.avatar_url
-        }
-        d['project'] = {
-            'id': project.id,
-            'name': project.name,
-            'short_description': project.short_description
-        }
-        devlogs.append(d)
+        devlogs.append({
+            'id': devlog.id,
+            'author': {'id': user.id},
+            'project': {'id': project.id}
+        })
 
     return jsonify({
         'total': total,
