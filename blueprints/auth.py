@@ -1,3 +1,6 @@
+import os
+
+import requests
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -127,3 +130,27 @@ def edit_own_user():
     db.session.commit()
 
     return jsonify({'message': 'profile updated successfully'}), 200
+
+@auth_bp.route('/uploadavatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    if 'file' not in request.files:
+        return jsonify({'error': 'no file uploaded'}), 400
+    uploaded_file = request.files['file']
+    if uploaded_file.filename == '':
+        return jsonify({'error': 'no selected file'})
+
+    cdn_key = os.environ.get('CDN_KEY')
+
+    response = requests.post(
+        'https://cdn.hackclub.com/api/v4/upload',
+        headers={'Authorization': f'Bearer {cdn_key}'},
+        files={'file': (uploaded_file.filename, uploaded_file.stream, uploaded_file.mimetype)}
+    )
+
+    if not response.ok:
+        return jsonify({'error': 'Failed to upload file'}), response.status_code
+
+    cdn_data = response.json()
+
+    return jsonify(cdn_data), 200
