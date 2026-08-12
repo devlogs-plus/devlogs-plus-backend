@@ -132,7 +132,6 @@ def edit_own_user():
     return jsonify({'message': 'profile updated successfully'}), 200
 
 @auth_bp.route('/uploadavatar', methods=['POST'])
-@login_required
 def upload_avatar():
     if 'file' not in request.files:
         return jsonify({'error': 'no file uploaded'}), 400
