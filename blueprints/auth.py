@@ -2,6 +2,7 @@ import os
 import secrets
 
 import requests
+from authlib.integrations.base_client import OAuthError
 from flask import Blueprint, jsonify, request, url_for, redirect, session
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -199,10 +200,30 @@ def github_login():
 
 @auth_bp.route('/auth/github/callback')
 def github_callback():
-    token = oauth.github.authorize_access_token()
+    oauth_error = request.args.get('error')
+    if oauth_error:
+        description = request.args.get('error_description') or 'GitHub login was cancelled or denied.'
+        return jsonify({
+            'error': oauth_error,
+            'description': description
+        }), 400
+    try:
+        token = oauth.github.authorize_access_token()
+    except OAuthError as error:
+        return jsonify({
+            'error': error.error,
+            'description': error.description or 'GitHub OAuth authentication failed.'
+        }), 400
 
-    github_user = oauth.github.get('user', token=token).json()
-    emails = oauth.github.get('user/emails', token=token).json()
+    github_user_response = oauth.github.get('user', token=token)
+    if not github_user_response.ok:
+        return jsonify({'error': 'Failed to fetch GitHub user profile'}), 502
+    emails_response = oauth.github.get('user/emails', token=token)
+    if not emails_response.ok:
+        return jsonify({'error': 'Failed to fetch GitHub account emails'}), 502
+
+    github_user = github_user_response.json()
+    emails = emails_response.json()
 
     primary_email = next(
         (
@@ -212,7 +233,6 @@ def github_callback():
         ),
         None
     )
-
     if not primary_email:
         return jsonify({'error': 'github account must have a verified primary email'}), 400
 
@@ -243,13 +263,27 @@ def hackclub_login():
 
 @auth_bp.route('/auth/hackclub/callback')
 def hackclub_callback():
-    token = oauth.hackclub.authorize_access_token()
-    nonce = session.pop('hackclub_oauth_nonce', None)
+    oauth_error = request.args.get('error')
+    if oauth_error:
+        session.pop('hackclub_oauth_nonce', None)
+        description = request.args.get('error_description') or 'Hack Club login was cancelled or denied.'
+        return jsonify({
+            'error': oauth_error,
+            'description': description
+        }), 400
 
+    nonce = session.pop('hackclub_oauth_nonce', None)
     if not nonce:
         return jsonify({'error': 'Missing OAuth nonce. Please try logging in again.'}), 400
 
-    user_info = oauth.hackclub.parse_id_token(token, nonce=nonce)
+    try:
+        token = oauth.hackclub.authorize_access_token()
+        user_info = oauth.hackclub.parse_id_token(token, nonce=nonce)
+    except OAuthError as error:
+        return jsonify({
+            'error': error.error,
+            'description': error.description or 'Hack Club OAuth authentication failed.'
+        }), 400
 
     email = user_info.get('email')
     email_verified = user_info.get('email_verified', True)
