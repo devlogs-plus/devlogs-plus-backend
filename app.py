@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy.model import Model
@@ -5,6 +7,8 @@ from flask_sqlalchemy.session import Session
 
 from extensions import db, login_manager, bcrypt
 from config import Config
+from oauth import init_oauth
+
 
 def create_app():
     app = Flask(__name__)
@@ -12,8 +16,11 @@ def create_app():
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+    app.config['GITHUB_CLIENT_ID'] = os.environ.get('GITHUB_CLIENT_ID')
+    app.config['GITHUB_CLIENT_SECRET'] = os.environ.get('GITHUB_CLIENT_SECRET')
 
     db.init_app(app)
+    init_oauth(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
     CORS(app, supports_credentials=True, origins=Config.CORS_ORIGINS)
