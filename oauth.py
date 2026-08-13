@@ -13,3 +13,10 @@ def init_oauth(app):
         api_base_url='https://api.github.com/',
         client_kwargs={'scope': 'read:user user:email'}
     )
+    oauth.register(
+        name='hackclub',
+        client_id=app.config['HACKCLUB_CLIENT_ID'],
+        client_secret=app.config['HACKCLUB_CLIENT_SECRET'],
+        server_metadata_url='https://auth.hackclub.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'}
+    )

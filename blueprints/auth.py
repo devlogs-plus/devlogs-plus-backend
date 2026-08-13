@@ -2,7 +2,7 @@ import os
 import secrets
 
 import requests
-from flask import Blueprint, jsonify, request, url_for, redirect
+from flask import Blueprint, jsonify, request, url_for, redirect, session
 from flask_login import login_user, logout_user, login_required, current_user
 
 from models import User
@@ -223,6 +223,50 @@ def github_callback():
             email=primary_email,
             display_name=github_user.get('name') or github_user.get('login'),
             avatar_url=github_user.get('avatar_url')
+        )
+
+        user.set_password(secrets.token_urlsafe(32))
+
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
+
+@auth_bp.route('/auth/hackclub')
+def hackclub_login():
+    redirect_uri = url_for('auth_bp.hackclub_callback', _external=True)
+    nonce = secrets.token_urlsafe(32)
+    session['hackclub_oauth_nonce'] = nonce
+    return oauth.hackclub.authorize_redirect(redirect_uri, nonce=nonce)
+
+@auth_bp.route('/auth/hackclub/callback')
+def hackclub_callback():
+    token = oauth.hackclub.authorize_access_token()
+    nonce = session.pop('hackclub_oauth_nonce', None)
+
+    if not nonce:
+        return jsonify({'error': 'Missing OAuth nonce. Please try logging in again.'}), 400
+
+    user_info = oauth.hackclub.parse_id_token(token, nonce=nonce)
+
+    email = user_info.get('email')
+    email_verified = user_info.get('email_verified', True)
+
+    if not email:
+        return jsonify({'error': 'HackClub account did not provide an email'}), 400
+
+    if not email_verified:
+        return jsonify({'error': 'HackClub account email must be verified'}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:
+        user = User(
+            email=email,
+            display_name=user_info.get('name') or user_info.get('preferred_username') or email.split('@')[0],
+            avatar_url=user_info.get('picture')
         )
 
         user.set_password(secrets.token_urlsafe(32))
