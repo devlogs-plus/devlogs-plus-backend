@@ -2,7 +2,7 @@ import os
 import secrets
 
 import requests
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, url_for, redirect
 from flask_login import login_user, logout_user, login_required, current_user
 
 from models import User
@@ -232,4 +232,4 @@ def github_callback():
 
     login_user(user)
 
-    return jsonify({'message': 'successfully logged in with github'})
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
