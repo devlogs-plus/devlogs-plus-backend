@@ -1,12 +1,12 @@
 import os
+import secrets
 
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy.model import Model
-from flask_sqlalchemy.session import Session
 
 from extensions import db, login_manager, bcrypt
 from config import Config
+from models import User
 from oauth import init_oauth
 
 
@@ -27,7 +27,6 @@ def create_app():
     bcrypt.init_app(app)
     CORS(app, supports_credentials=True, origins=Config.CORS_ORIGINS)
 
-    from models import User
     @login_manager.user_loader
     def load_user(user_id):
         try:
@@ -51,6 +50,15 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         db.create_all()
+        deleted_user = User(
+            id=0,
+            email='',
+            display_name='Deleted User',
+            avatar_url=''
+        )
+        deleted_user.set_password(secrets.token_urlsafe(32))
+        db.session.add(deleted_user)
+        db.session.commit()
     app.run(host='0.0.0.0', port=5000,
             ssl_context=('C:\\Certs\\localhost+2.pem',
                          'C:\\Certs\\localhost+2-key.pem'),
