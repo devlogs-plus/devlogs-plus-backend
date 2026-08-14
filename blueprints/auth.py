@@ -311,3 +311,16 @@ def hackclub_callback():
     login_user(user)
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
+
+@auth_bp.route('/auth/me/edit', methods=['DELETE'])
+@login_required
+def delete_self():
+    user = User.query.get(current_user.id)
+    logout_user()
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+    except Exception as error:
+        return jsonify({'error': str(error)}), 500
+    return jsonify({'message': 'successfully deleted user'}), 200
