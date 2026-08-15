@@ -9,6 +9,18 @@ from config import Config
 from models import User
 from oauth import init_oauth
 
+def make_deleted_user():
+    deleted_user_exists = User.query.get(0) is not None
+    if not deleted_user_exists:
+        deleted_user = User(
+            id=0,
+            email="",
+            display_name="Deleted User",
+            avatar_url=""
+        )
+        deleted_user.set_password(secrets.token_urlsafe(32))
+        db.session.add(deleted_user)
+        db.session.commit()
 
 def create_app():
     app = Flask(__name__)
@@ -43,24 +55,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        make_deleted_user()
 
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        db.create_all()
-        deleted_user_exists = User.query.get(0) is not None
-        if not deleted_user_exists:
-            deleted_user = User(
-                id=0,
-                email='',
-                display_name='Deleted User',
-                avatar_url=''
-            )
-            deleted_user.set_password(secrets.token_urlsafe(32))
-            db.session.add(deleted_user)
-            db.session.commit()
     app.run(host='0.0.0.0', port=5000,
             ssl_context=('C:\\Certs\\localhost+2.pem',
                          'C:\\Certs\\localhost+2-key.pem'),
