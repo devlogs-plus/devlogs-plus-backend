@@ -320,8 +320,8 @@ def delete_self():
     if not user:
         return jsonify({'error': 'user not found'}), 404
     try:
-        logout_user()
         anonymize_and_delete_user(user)
+        logout_user()
     except Exception as error:
         return jsonify({'error': str(error)}), 500
     return jsonify({'message': 'successfully deleted user'}), 200
