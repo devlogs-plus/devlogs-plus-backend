@@ -9,6 +9,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from models import User
 from extensions import db
 from oauth import oauth
+from utils import anonymize_and_delete_user
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -312,15 +313,15 @@ def hackclub_callback():
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
 
-@auth_bp.route('/auth/me/edit', methods=['DELETE'])
+@auth_bp.route('/auth/me/delete', methods=['DELETE'])
 @login_required
 def delete_self():
     user = User.query.get(current_user.id)
-    logout_user()
-
+    if not user:
+        return jsonify({'error': 'user not found'}), 404
     try:
-        db.session.delete(user)
-        db.session.commit()
+        logout_user()
+        anonymize_and_delete_user(user)
     except Exception as error:
         return jsonify({'error': str(error)}), 500
     return jsonify({'message': 'successfully deleted user'}), 200
