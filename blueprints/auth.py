@@ -325,3 +325,23 @@ def delete_self():
     except Exception as error:
         return jsonify({'error': str(error)}), 500
     return jsonify({'message': 'successfully deleted user'}), 200
+
+@auth_bp.route('/auth/me/editpassword', methods=['POST'])
+@login_required
+def edit_password():
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    user = User.query.get(current_user.id)
+    if not user:
+        return jsonify({'error': 'not logged in'}), 401
+    if not user.check_password(password=old_password):
+        return jsonify({'error': 'old password is not correct'}), 400
+
+    user.set_password(password=new_password)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'failed to edit password'}), 500
+    return jsonify({'message': 'password changed successful'}), 200
