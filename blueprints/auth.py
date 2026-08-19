@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request, url_for, redirect, session
 from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature
 
-from app import app
+from flask import current_app
 from models import User
 from extensions import db
 from oauth import oauth
@@ -357,7 +357,7 @@ def reset_password():
     if not new_password or not verification_code or not user_id:
         return jsonify({'error': 'missing required fields'}), 400
 
-    s = URLSafeSerializer(app.config['SECRET_KEY'])
+    s = URLSafeSerializer(current_app.config['SECRET_KEY'])
     try:
         token_user_id = int(s.loads(verification_code, max_age=3600))
     except SignatureExpired:
