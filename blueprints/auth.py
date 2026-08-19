@@ -5,7 +5,9 @@ import requests
 from authlib.integrations.base_client import OAuthError
 from flask import Blueprint, jsonify, request, url_for, redirect, session
 from flask_login import login_user, logout_user, login_required, current_user
+from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature
 
+from app import app
 from models import User
 from extensions import db
 from oauth import oauth
@@ -345,3 +347,35 @@ def edit_password():
         db.session.rollback()
         return jsonify({'error': 'failed to edit password'}), 500
     return jsonify({'message': 'password changed successful'}), 200
+
+@auth_bp.route('/auth/resetpassword', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    new_password = data.get('password')
+    verification_code = data.get('verification_code')
+    user_id = data.get('user_id')
+    if not new_password or not verification_code or not user_id:
+        return jsonify({'error': 'missing required fields'}), 400
+
+    s = URLSafeSerializer(app.config['SECRET_KEY'])
+    try:
+        token_user_id = int(s.loads(verification_code, max_age=3600))
+    except SignatureExpired:
+        return jsonify({'error': 'verification code expired'}), 400
+    except BadSignature:
+        return jsonify({'error': 'invalid verification code'}), 400
+
+    if token_user_id != int(user_id):
+        return jsonify({'error': 'verification code does not match user'}), 400
+
+    user = User.query.get(token_user_id)
+    if not user:
+        return jsonify({'error': 'user does not exist'}), 404
+
+    user.set_password(password=new_password)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({'error': 'failed to reset password'}), 500
+    return jsonify({'message': 'password changed successfully'}), 200

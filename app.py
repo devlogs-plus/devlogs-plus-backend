@@ -25,6 +25,7 @@ def make_deleted_user():
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'None'
