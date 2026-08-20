@@ -1,8 +1,10 @@
 from functools import wraps
 
-from flask import jsonify
+from flask import jsonify, current_app
 from flask_login import current_user
 from flask_sqlalchemy.model import Model
+from itsdangerous import URLSafeTimedSerializer
+
 from extensions import db
 
 from models import ProjectCollaborator, Project, Devlog
@@ -42,3 +44,7 @@ def require_project_access(f):
             return jsonify({'error': 'unauthorized'}), 403
         return f(project_id, *args, **kwargs)
     return decorated_function
+
+def generate_verification_code(user):
+    verification_code = URLSafeTimedSerializer(current_app.config['SECRET_KEY']).dumps(user.id)
+    return verification_code
