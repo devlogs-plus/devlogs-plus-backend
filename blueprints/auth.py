@@ -5,14 +5,14 @@ import requests
 from authlib.integrations.base_client import OAuthError
 from flask import Blueprint, jsonify, request, url_for, redirect, session
 from flask_login import login_user, logout_user, login_required, current_user
-from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature
+from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature, URLSafeTimedSerializer
 
 from flask import current_app
 from models import User
 from extensions import db
 from oauth import oauth
 from render_functions import send_reset_email
-from utils import anonymize_and_delete_user
+from utils import anonymize_and_delete_user, generate_verification_code
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -358,7 +358,7 @@ def reset_password():
     if not new_password or not verification_code or not user_id:
         return jsonify({'error': 'missing required fields'}), 400
 
-    s = URLSafeSerializer(current_app.config['SECRET_KEY'])
+    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
         token_user_id = int(s.loads(verification_code, max_age=3600))
     except SignatureExpired:
@@ -385,3 +385,11 @@ def reset_password():
 def send_test_email():
     send_reset_email("jacksonwengler@gmail.com", "what did you do at school? Today I played with our chromebooks I played boddle. What did you do?") #My little brother made this
     return jsonify({'message': 'it worked'})
+
+@auth_bp.route('/auth/requestcode', methods=['POST'])
+def request_verification_code():
+    data = request.get_json()
+    email = data.get('email')
+    user = User.query.filter_by(email=str(email)).first()
+    verification_code = generate_verification_code(user)
+    return jsonify({'code': verification_code}), 200
