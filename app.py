@@ -33,6 +33,7 @@ def create_app():
     app.config['GITHUB_CLIENT_SECRET'] = os.environ.get('GITHUB_CLIENT_SECRET')
     app.config['HACKCLUB_CLIENT_ID'] = os.environ.get('HACKCLUB_CLIENT_ID')
     app.config['HACKCLUB_CLIENT_SECRET'] = os.environ.get('HACKCLUB_CLIENT_SECRET')
+    app.config['RESEND_API_KEY'] = os.environ.get('RESEND_API_KEY')
 
     db.init_app(app)
     init_oauth(app)

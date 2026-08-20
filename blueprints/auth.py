@@ -11,6 +11,7 @@ from flask import current_app
 from models import User
 from extensions import db
 from oauth import oauth
+from render_functions import send_reset_email
 from utils import anonymize_and_delete_user
 
 auth_bp = Blueprint('auth_bp', __name__)
@@ -379,3 +380,8 @@ def reset_password():
         db.session.rollback()
         return jsonify({'error': 'failed to reset password'}), 500
     return jsonify({'message': 'password changed successfully'}), 200
+
+@auth_bp.route('/emails/test')
+def send_test_email():
+    send_reset_email("jacksonwengler@gmail.com", "what did you do at school? Today I played with our chromebooks I played boddle. What did you do?") #My little brother made this
+    return jsonify({'message': 'it worked'})
