@@ -19,7 +19,7 @@ def send_reset_email(to, html):
         "to": [to],
         "subject": "Reset your Password",
         "html": html,
-        "reply_to": "Devlogs+ <contact@devlogs.plus"
+        "reply_to": "Devlogs+ <contact@devlogs.plus>"
     }
 
     return resend.Emails.send(params)
