@@ -406,6 +406,33 @@ def send_test_email():
     send_reset_email("delivered@resend.dev", html)
     return jsonify({'message': 'it worked'})
 
+@auth_bp.route('/email/send/reset')
+def send_password_reset_email():
+    data = request.get_json()
+    email = data.get('email')
+    user = User.query.filter_by(email=str(email)).first()
+    verification_code = generate_verification_code(user)
+    html = f"""
+    <div style="background-color: #3b4252; font-family: sans-serif; margin: 3px; padding: 5px">
+	<h1 style="color: #eceff4">Reset your password</h1>
+	<p style="color: #eceff4">Hello Devlogs+ user,</p>
+	<p style="color: #eceff4">Someone has recently requested a password reset link for your account.</p>
+	<p style="color: #eceff4">If that was you click the button below.</p>
+	<p style="color: #eceff4">If that was not you, you can ignore this email</p>
+	<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 5px; display: inline-block;">
+  <tr>
+    <td align="center" bgcolor="#88c0d0" style="border-radius: 4px; padding: 0.5rem 1rem;">
+      <a href="https://devlogs.plus/auth/resetpassword?code={verification_code}&email={email}" 
+         target="_blank" 
+         style="display: inline-block; font-family: Arial, sans-serif; font-size: 1rem; font-weight: 600; color: #2e3440; text-decoration: none;">
+         Reset your password
+      </a>
+    </td>
+  </tr>
+</table>
+    """
+    send_reset_email(email, html)
+
 @auth_bp.route('/auth/requestcode', methods=['POST'])
 def request_verification_code():
     data = request.get_json()
