@@ -404,7 +404,7 @@ def send_test_email():
 </table>
     """
     send_reset_email("delivered@resend.dev", html)
-    return jsonify({'message': 'it worked'})
+    return jsonify({'message': 'it worked'}), 200
 
 @auth_bp.route('/email/send/reset')
 def send_password_reset_email():
@@ -432,7 +432,7 @@ def send_password_reset_email():
 </table>
     """
     send_reset_email(email, html)
-    return jsonify({'message': 'email sent successfully'})
+    return jsonify({'message': 'email sent successfully'}), 200
 
 @auth_bp.route('/auth/requestcode', methods=['POST'])
 def request_verification_code():
