@@ -406,7 +406,7 @@ def send_test_email():
     send_reset_email("delivered@resend.dev", html)
     return jsonify({'message': 'it worked'}), 200
 
-@auth_bp.route('/email/send/reset')
+@auth_bp.route('/email/send/reset', methods=['POST'])
 def send_password_reset_email():
     data = request.get_json()
     email = data.get('email')
