@@ -354,8 +354,10 @@ def reset_password():
     data = request.get_json()
     new_password = data.get('password')
     verification_code = data.get('verification_code')
-    user_id = data.get('user_id')
-    if not new_password or not verification_code or not user_id:
+    email = data.get('email')
+    user_from_email = User.query.filter_by(email=str(email)).first()
+    user_id = user_from_email.id
+    if not new_password or not verification_code or not email:
         return jsonify({'error': 'missing required fields'}), 400
 
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
