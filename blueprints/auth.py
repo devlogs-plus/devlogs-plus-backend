@@ -357,8 +357,12 @@ def reset_password():
     email = data.get('email')
     user_from_email = User.query.filter_by(email=str(email)).first()
     user_id = user_from_email.id
-    if not new_password or not verification_code or not email:
-        return jsonify({'error': 'missing required fields'}), 400
+    if not new_password:
+        return jsonify({'error': 'missing new password'}), 400
+    if not verification_code:
+        return jsonify({'error': 'missing verification code'}), 400
+    if not email:
+        return jsonify({'error': 'missing email'}), 400
 
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
