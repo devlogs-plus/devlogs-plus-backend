@@ -60,6 +60,25 @@ def create_project():
 
     return jsonify({'message': f'success! project {name} created!'}), 200
 
+@project_bp.route('/projects/user/<int:user_id>', methods=['GET'])
+def view_users_projects(user_id):
+    projects = Project.query.filter_by(owner_user_id=user_id)
+    return jsonify({
+        'projects': [
+            {
+                'id': project.id,
+                'owner_user_id': project.owner_user_id,
+                'name': project.name,
+                'short_description': project.short_description,
+                'demo_url': project.demo_url,
+                'repo_url': project.repo_url,
+                'created_at': project.created_at,
+                'updated_at': project.updated_at
+            }
+            for project in projects
+        ]
+    }), 200
+
 @project_bp.route('/projects/<int:project_id>', methods=['GET'])
 def get_project(project_id):
     project = Project.query.get(project_id)
