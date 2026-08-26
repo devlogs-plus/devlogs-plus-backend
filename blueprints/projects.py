@@ -1,3 +1,5 @@
+from operator import or_
+
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 
@@ -62,7 +64,21 @@ def create_project():
 
 @project_bp.route('/projects/user/<int:user_id>', methods=['GET'])
 def view_users_projects(user_id):
-    projects = Project.query.filter_by(owner_user_id=user_id)
+    projects = (
+        Project.query
+        .outerjoin(
+            ProjectCollaborator,
+            Project.id == ProjectCollaborator.project_id
+        )
+        .filter(
+            or_(
+                Project.owner_user_id == user_id,
+                ProjectCollaborator.user_id == user_id
+            )
+        )
+        .distinct()
+        .all()
+    )
     return jsonify({
         'projects': [
             {
