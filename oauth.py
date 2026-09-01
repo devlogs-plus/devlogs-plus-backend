@@ -20,3 +20,12 @@ def init_oauth(app):
         server_metadata_url='https://auth.hackclub.com/.well-known/openid-configuration',
         client_kwargs={'scope': 'openid email profile'}
     )
+    oauth.register(
+        name='hackatime',
+        client_id=app.config['HACKATIME_CLIENT_ID'],
+        client_secret=app.config['HACKATIME_CLIENT_SECRET'],
+        authorize_url='https://hackatime.hackclub.com/oauth/authorize',
+        access_token_url='https://hackatime.hackclub.com/oauth/token',
+        api_base_url='https://hackatime.hackclub.com/api',
+        client_kwargs={'scope': 'profile read'}
+    )
