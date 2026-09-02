@@ -17,6 +17,17 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
+class HackatimeConnection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    hackatime_user_id = db.Column(db.String(200))
+    access_token = db.Column(db.Text, nullable=False)
+    refresh_token = db.Column(db.Text)
+    token_type = db.Column(db.String(50), default='Bearer')
+    expires_at = db.Column(db.DateTime)
+    connected_at = db.COlumn(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, deafult=datetime.utcnow, onupdate=datetime.utcnow)
+
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     owner_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
