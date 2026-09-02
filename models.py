@@ -25,7 +25,7 @@ class HackatimeConnection(db.Model):
     refresh_token = db.Column(db.Text)
     token_type = db.Column(db.String(50), default='Bearer')
     expires_at = db.Column(db.DateTime)
-    connected_at = db.COlumn(db.DateTime, default=datetime.utcnow)
+    connected_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, deafult=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Project(db.Model):
