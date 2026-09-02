@@ -494,3 +494,25 @@ def hackatime_connect_callback():
     db.session.commit()
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
+
+@auth_bp.route('/auth/hackatime/projects', methods=['GET'])
+@login_required
+def get_hackatime_projects():
+    connection = HackatimeConnection.query.filter_by(user_id=current_user.id).first()
+
+    if connection is None:
+        return jsonify({'error': 'hackatime account not connected'}), 400
+
+    response = requests.get(
+        'https://hackatime.hackclub.com/api/v1/authenticated/projects',
+        headers={'Authorization': f'Bearer {connection.access_token}'},
+        timeout=10
+    )
+
+    if response.status_code == 401:
+        return jsonify({'error': 'hackatime token is invalid. please sign in to hackatime again'}), 401
+
+    if not response.ok:
+        return jsonify({'error': 'failed to get hackatime projects'}), 502
+
+    return jsonify(response.json()), 200
