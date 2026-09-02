@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 import secrets
 
@@ -8,7 +9,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature, URLSafeTimedSerializer
 
 from flask import current_app
-from models import User
+from models import User, HackatimeConnection
 from extensions import db
 from oauth import oauth
 from render_functions import send_reset_email
@@ -447,3 +448,49 @@ def request_verification_code():
     user = User.query.filter_by(email=str(email)).first()
     verification_code = generate_verification_code(user)
     return jsonify({'code': verification_code}), 200
+
+@auth_bp.route('/auth/hackatime/connect')
+@login_required
+def hackatime_connect():
+    redirect_uri = url_for('auth_bp.hackatime_connect_callback', _external=True)
+    return oauth.hackatime.authorize_redirect(redirect_uri)
+
+@auth_bp.route('/auth/hackatime/connect/callback')
+@login_required
+def hackatime_connect_callback():
+    oauth_error = request.args.get('error')
+    if oauth_error:
+        description = request.args.get('error_description') or 'Hackatime connection was cancelled or denied'
+        return jsonify({'error': oauth_error, 'description': description}), 400
+
+    try:
+        token = oauth.hackatime.authorize_access_token()
+    except OAuthError as error:
+        return jsonify({'error': error.error, 'description': error.description or 'Hackatime OAuth connection failed.'}), 400
+
+    access_token = token.get('access_token')
+    refresh_token = token.get('refresh_token')
+    expires_in = token.get('expires_in')
+    token_type = token.get('token_type', 'Bearer')
+
+    if not access_token:
+        return jsonify({'error': 'hackatime did not return and access token'}), 400
+
+    expires_at = None
+    if expires_in:
+        expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
+
+    connection = HackatimeConnection.query.filter_by(user_id=current_user.id).first()
+
+    if connection is None:
+        connection = HackatimeConnection(user_id=current_user.id)
+        db.session.add(connection)
+
+    connection.access_token = access_token
+    connection.refresh_token = refresh_token
+    connection.token_type = token_type
+    connection.expires_at = expires_at
+
+    db.session.commit()
+
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
