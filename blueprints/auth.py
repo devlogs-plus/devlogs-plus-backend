@@ -497,7 +497,7 @@ def hackatime_connect_callback():
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
 
-@auth_bp.route('/auth/hackatime/disconnect', emthods=['DELETE'])
+@auth_bp.route('/auth/hackatime/disconnect', methods=['DELETE'])
 @login_required
 def disconnect_hackatime():
     connection = HackatimeConnection.query.filter_by(user_id=current_user.id).first()
