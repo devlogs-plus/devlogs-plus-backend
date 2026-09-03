@@ -9,6 +9,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from itsdangerous import URLSafeSerializer, SignatureExpired, BadSignature, URLSafeTimedSerializer
 
 from flask import current_app
+from sqlalchemy.exc import SQLAlchemyError
+
 from models import User, HackatimeConnection
 from extensions import db
 from oauth import oauth
@@ -495,6 +497,25 @@ def hackatime_connect_callback():
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
 
+@auth_bp.route('/auth/hackatime/disconnect', emthods=['DELETE'])
+@login_required
+def disconnect_hackatime():
+    connection = HackatimeConnection.query.filter_by(user_id=current_user.id).first()
+    if connection is None:
+        return jsonify({'error': 'no hackatime account to disconnect'}), 400
+
+    try:
+        db.session.delete(connection)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'error': f'error removing hackatime connection: {e}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'error removing hackatime connection: {e}'})
+
+    return jsonify({'message': 'hackatime account successfully disconnected'})
+
+
 @auth_bp.route('/auth/hackatime/projects', methods=['GET'])
 @login_required
 def get_hackatime_projects():
@@ -516,3 +537,4 @@ def get_hackatime_projects():
         return jsonify({'error': 'failed to get hackatime projects'}), 502
 
     return jsonify(response.json()), 200
+
