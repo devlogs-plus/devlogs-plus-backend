@@ -35,6 +35,7 @@ class Project(db.Model):
     short_description = db.Column(db.Text)
     demo_url = db.Column(db.String(500))
     repo_url = db.Column(db.String(500))
+    hackatime_project_name = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

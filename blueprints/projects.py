@@ -210,3 +210,33 @@ def get_project_collaborators(project_id):
         'project_id': project_id,
         'collaborator_user_id': user_ids
     }), 200
+
+@project_bp.route('/projects/<int:project_id>/hackatime', methods=['PATCH'])
+@login_required
+def link_hackatime_project(project_id):
+    data = request.get_json()
+
+    if not isinstance(data, dict):
+        return jsonify({'error': 'request body must be valid json'}), 400
+
+    hackatime_project_name = data.get('hackatime_project_name')
+
+    if not hackatime_project_name:
+        return jsonify({'error': 'project name is required'}), 400
+
+    project = Project.query.get(project_id)
+
+    if not project:
+        return jsonify({'error': 'project not found'}), 404
+
+    if project.owner_user_id != current_user.id:
+        return jsonify({'error': 'current user does not own project'}), 403
+
+    project.hackatime_project_name = hackatime_project_name
+    db.session.commit()
+
+    return jsonify({
+        'message': 'hackatime project linked',
+        'project_id': project.id,
+        'hackatime_project_name': project.hackatime_project_name
+    }), 200
