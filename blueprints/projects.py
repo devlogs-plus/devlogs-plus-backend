@@ -1,10 +1,11 @@
 from operator import or_
 
+import requests
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Project, ProjectCollaborator
+from models import Project, ProjectCollaborator, HackatimeConnection
 
 project_bp = Blueprint('project_bp', __name__)
 
@@ -239,4 +240,47 @@ def link_hackatime_project(project_id):
         'message': 'hackatime project linked',
         'project_id': project.id,
         'hackatime_project_name': project.hackatime_project_name
+    }), 200
+
+@project_bp.route('/projects/<int:project_id>/hackatime', methods=['GET'])
+@login_required
+def get_hackatime_project(project_id):
+    project = Project.query.get(project_id)
+
+    if not project:
+        return jsonify({'error': 'project not found'}), 404
+    if project.owner_user_id != current_user.id:
+        return jsonify({'error': 'current user does not use project'}), 403
+    if not project.hackatime_project_name:
+        return jsonify({'error': 'project not linked'}), 400
+
+    connection = HackatimeConnection.query.filter_by(user_id=current_user.id).first()
+
+    if connection is None:
+        return jsonify({'error': 'hackatime account not connected'}), 400
+
+    response = requests.get('https://hackatime.hackclub.com/api/v1/authenticated/projects', headers={
+        'Authorization': f'Bearer {connection.access_token}'
+    }, timeout=10)
+
+    if response.status_code == 401:
+        return jsonify({'error': 'hackatime token invalid, reconnect hackatime'}), 401
+    if not response.ok:
+        return jsonify({'error': 'failed to get hackatime'}), 502
+
+    hackatime_projects = response.json().get('projects', [])
+    hackatime_project = next((
+        item for item in hackatime_projects
+        if item.get('name') == project.hackatime_project_name
+    ), None)
+    if hackatime_project is None:
+        return jsonify({'error': 'linked hackatime project not found'}), 404
+
+    total_seconds = hackatime_project.get('total_seconds', 0)
+
+    return jsonify({
+        'project_id': project.id,
+        'project_name': project.name,
+        'hackatime_project_name': project.hackatime_project_name,
+        'total_seconds': total_seconds
     }), 200
