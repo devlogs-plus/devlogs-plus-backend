@@ -82,6 +82,7 @@ class Devlog(db.Model):
     published_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    seconds_spent = db.Column(db.String(500))
 
     def to_dict(self):
         return {
@@ -92,5 +93,6 @@ class Devlog(db.Model):
             'body_markdown': self.body_markdown,
             'published_at': self.published_at,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
+            'updated_at': self.updated_at,
+            'seconds_spent': self.seconds_spent
         }

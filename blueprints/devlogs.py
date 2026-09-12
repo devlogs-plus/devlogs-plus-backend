@@ -23,7 +23,8 @@ def get_devlogs(project_id):
                 'body_markdown': devlog.body_markdown,
                 'published_at': devlog.published_at,
                 'created_at': devlog.created_at,
-                'updated_at': devlog.updated_at
+                'updated_at': devlog.updated_at,
+                'seconds_spent': devlog.seconds_spent
             }
             for devlog in devlogs
         ]
@@ -47,15 +48,16 @@ def create_devlog(project_id):
             'error': f'Missing required fields: {", ".join(missing_fields)}'
         }), 400
 
-    author_user_id = current_user.id
     title = data.get('title')
     body_markdown = data.get('body_markdown')
+    seconds_spent = data.get('seconds_spent')
 
     devlog = Devlog(
         project_id=project_id,
         author_user_id=current_user.id,
         title=title,
-        body_markdown=body_markdown
+        body_markdown=body_markdown,
+        seconds_spent=seconds_spent
     )
 
     db.session.add(devlog)
@@ -79,7 +81,8 @@ def get_devlog(project_id, devlog_id):
             'body_markdown': devlog.body_markdown,
             'published_at': devlog.published_at,
             'created_at': devlog.created_at,
-            'updated_at': devlog.updated_at
+            'updated_at': devlog.updated_at,
+            'seconds_spent': devlog.seconds_spent
         }
     ), 200
 
