@@ -607,7 +607,7 @@ def disconnect_wakatime():
 def get_wakatime_projects():
     connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='wakatime').first()
     if connection is None:
-        return jsonify({'error': 'wakatime acount not connected'}), 400
+        return jsonify({'error': 'wakatime acount not connected'}), 404
 
     response = requests.get(
         'https://wakatime.com/api/v1/authenticated/projects',
@@ -621,3 +621,19 @@ def get_wakatime_projects():
         return jsonify({'error': 'failed to get wakatime projects'}), 502
 
     return jsonify(response.json()), 200
+
+@auth_bp.route('/auth/wakatime/exists', methods=['GET'])
+@login_required
+def is_wakatime_connected():
+    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='wakatime').first()
+    if connection is None:
+        return jsonify({'message': 'no connection for wakatime found'}), 404
+    return jsonify({'message': 'a connection for wakatime found'}), 200
+
+@auth_bp.route('/auth/hackatime/exists', methods=['GET'])
+@login_required
+def is_hackatime_connected():
+    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='hackatime').first()
+    if connection is None:
+        return jsonify({'message': 'no connection for hackatime found'}), 404
+    return jsonify({'message': 'a connection for hackatime found'}), 200
