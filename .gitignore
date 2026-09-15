@@ -163,3 +163,4 @@ cython_debug/
 #.idea/
 
 /tests/
+!/instance/devlogs_plus.db
