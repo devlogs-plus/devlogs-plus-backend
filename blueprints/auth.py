@@ -569,8 +569,16 @@ def wakatime_connect_callback():
     if expires_in:
         expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
 
-    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='wakatime').first()
+    resp = oauth.wakatime.get('users/current', token=token, timeout=10)
+    if not resp.ok:
+        return jsonify({'error': 'failed to get wakatime user info'}), 502
 
+    user_info = resp.json()
+    provider_user_id = None
+    if isinstance(user_info, dict):
+        provider_user_id = str(user_info['data'].get('id'))
+
+    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='wakatime').first()
     if connection is None:
         connection = TimeTrackingConnection(user_id=current_user.id, provider='wakatime')
         db.session.add(connection)
@@ -579,6 +587,8 @@ def wakatime_connect_callback():
     connection.refresh_token = refresh_token
     connection.token_type = token_type
     connection.expires_at = expires_at
+    if provider_user_id:
+        connection.provider_user_id = provider_user_id
 
     db.session.commit()
 
