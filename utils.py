@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import jsonify, current_app
@@ -8,6 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 from extensions import db
 
 from models import ProjectCollaborator, Project, Devlog
+from oauth import oauth
 
 
 def is_user_authorized_for_project(user_id, project_id):
@@ -48,3 +50,21 @@ def require_project_access(f):
 def generate_verification_code(user):
     verification_code = URLSafeTimedSerializer(current_app.config['SECRET_KEY']).dumps(user.id)
     return verification_code
+
+def refresh_wakatime_token(connection):
+    if not connection.refresh_token:
+        return None
+    new_token = oauth.wakatime.refresh_token(
+        token_url='https://wakatime.com/oauth/token',
+        refresh_token=connection.refresh_token,
+        client_id=current_app.config['WAKATIME_CLIENT_ID'],
+        client_secret=current_app.config['WAKATIME_CLIENT_SECRET']
+    )
+    if not new_token or 'access_token' not in new_token:
+        return None
+    connection.access_token = new_token.get('access_token')
+    connection.refresh_token = new_token.get('refresh_token', connection.refresh_token)
+    expires_in = new_token.get('expires_in')
+    connection.expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in)) if expires_in else None
+    db.session.commit()
+    return new_token
