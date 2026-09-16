@@ -495,9 +495,9 @@ def hackatime_connect_callback():
 
     db.session.commit()
 
-    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
-@auth_bp.route('/auth/hackatime/disconnect', methods=['DELETE'])
+@auth_bp.route('/auth/hackatime/disconnect', methods=['GET'])
 @login_required
 def disconnect_hackatime():
     connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='hackatime').first()
@@ -513,7 +513,7 @@ def disconnect_hackatime():
     except Exception as e:
         return jsonify({'error': f'error removing hackatime connection: {e}'}), 500
 
-    return jsonify({'message': 'hackatime account successfully disconnected'}), 200
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
 
 @auth_bp.route('/auth/hackatime/projects', methods=['GET'])
@@ -592,9 +592,9 @@ def wakatime_connect_callback():
 
     db.session.commit()
 
-    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173'))
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
-@auth_bp.route('/auth/wakatime/disconnect', methods=['DELETE'])
+@auth_bp.route('/auth/wakatime/disconnect', methods=['GET'])
 @login_required
 def disconnect_wakatime():
     connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='wakatime').first()
@@ -610,7 +610,7 @@ def disconnect_wakatime():
     except Exception as e:
         return jsonify({'error': f'error removing wakatime connection: {e}'}), 500
 
-    return jsonify({'message': 'wakatime account successfully disconnected'}), 200
+    return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
 @auth_bp.route('/auth/wakatime/projects', methods=['GET'])
 @login_required
