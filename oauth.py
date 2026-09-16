@@ -36,5 +36,5 @@ def init_oauth(app):
         authorize_url='https://wakatime.com/oauth/authorize',
         access_token_url='https://wakatime.com/oauth/token',
         api_base_url='https://wakatime.com/api/v1/',
-        client_kwargs={'scope': 'read_summaries.projects read_heartbeats email'}
+        client_kwargs={'scope': 'read_summaries.projects read_heartbeats email', 'token_endpoint_auth_method': 'client_secret_post'}
     )
