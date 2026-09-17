@@ -620,7 +620,7 @@ def get_wakatime_projects():
         return jsonify({'error': 'wakatime acount not connected'}), 404
 
     response = requests.get(
-        'https://wakatime.com/api/v1/authenticated/projects',
+        'https://wakatime.com/api/v1/users/current/projects',
         headers={'Authorization': f'Bearer {connection.access_token}'},
         timeout=10
     )
