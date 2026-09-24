@@ -110,7 +110,16 @@ def get_project(project_id):
             'demo_url': project.demo_url,
             'repo_url': project.repo_url,
             'created_at': project.created_at,
-            'updated_at': project.updated_at
+            'updated_at': project.updated_at,
+            'time_tracking_projects': [
+                {
+                    'id': time_project.id,
+                    'name': time_project.name,
+                    'provider': time_project.provider,
+                    'created_at': time_project.created_at
+                }
+                for time_project in project.time_tracking_projects
+            ]
         }), 200
 
 @project_bp.route('/projects/<int:project_id>', methods=['PATCH'])
