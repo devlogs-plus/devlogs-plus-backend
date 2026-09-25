@@ -229,10 +229,10 @@ def link_time_project(project_id):
     if not isinstance(data, dict):
         return jsonify({'error': 'request body must be valid json'}), 400
 
-    time_tracking_project_names = data.get('time_tracking_project_names')
+    time_tracking_projects = data.get('time_tracking_projects')
 
-    if not isinstance(time_tracking_project_names, list) or not time_tracking_project_names:
-        return jsonify({'error': 'time_tracking_project_names must be a non-empty list'}), 400
+    if not isinstance(time_tracking_projects, list) or not time_tracking_projects:
+        return jsonify({'error': 'time_tracking_projects must be a non-empty list'}), 400
 
     project = Project.query.get(project_id)
 
@@ -241,16 +241,50 @@ def link_time_project(project_id):
     if project.owner_user_id != current_user.id:
         return jsonify({'error': 'current user does not own project'}), 403
 
-    ProjectTimeTrackingProject.query.filter_by(project_id=project.id).delete()
+    normalized_time_tracking_projects = []
+    seen_time_tracking_projects = set()
 
-    for name in time_tracking_project_names:
+    for time_tracking_project in time_tracking_projects:
+        if not isinstance(time_tracking_project, dict):
+            return jsonify({'error': 'each time tracking project must be an object'}), 400
+
+        name = time_tracking_project.get('name')
+        provider = time_tracking_project.get('provider')
+
         if not isinstance(name, str) or not name.strip():
             return jsonify({'error': 'each time tracking project name must be a non-empty string'}), 400
-        db.session.add(ProjectTimeTrackingProject(project_id=project.id, name=name.strip()))
+
+        if not isinstance(provider, str) or not provider.strip():
+            return jsonify({'error': 'each time tracking project provider must be a non-empty string'}), 400
+
+        normalized_name = name.strip()
+        normalized_provider = provider.strip()
+        time_tracking_project_key = (normalized_name, normalized_provider)
+
+        if time_tracking_project_key in seen_time_tracking_projects:
+            return jsonify({
+                'error': f'duplicate time tracking project: {normalized_name} ({normalized_provider})'
+            }), 400
+
+        seen_time_tracking_projects.add(time_tracking_project_key)
+        normalized_time_tracking_projects.append({
+            'name': normalized_name,
+            'provider': normalized_provider
+        })
+
+    ProjectTimeTrackingProject.query.filter_by(project_id=project.id).delete()
+    db.session.flush()
+
+    for time_tracking_project in normalized_time_tracking_projects:
+        db.session.add(ProjectTimeTrackingProject(
+            project_id=project.id,
+            name=time_tracking_project['name'],
+            provider=time_tracking_project['provider']
+        ))
 
     db.session.commit()
 
-    return jsonify({'message': 'time tracking project linked'}), 200
+    return jsonify({'message': 'time tracking projects linked'}), 200
 
 @project_bp.route('/projects/<int:project_id>/time', methods=['GET'])
 def get_linked_time_projects(project_id):
@@ -264,7 +298,11 @@ def get_linked_time_projects(project_id):
     ).all()
 
     return jsonify({
-        'time_tracking_project_names': [
-            linked_project.name for linked_project in linked_projects
+        'time_tracking_projects': [
+            {
+                'name': linked_project.name,
+                'provider': linked_project.provider
+            }
+            for linked_project in linked_projects
         ]
     }), 200
