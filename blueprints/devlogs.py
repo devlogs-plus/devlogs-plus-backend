@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
 from utils import require_project_access
 
@@ -169,4 +170,21 @@ def get_feed():
         'page': page,
         'per_page': per_page,
         'devlogs': devlogs
+    }), 200
+
+@devlog_bp.route('/projects/<int:project_id>/seconds-spent', methods=['GET'])
+def get_project_seconds_spent(project_id):
+    project = Project.query.get(project_id)
+    if not project_id:
+        return jsonify({'error': 'project not found'}), 404
+
+    total_seconds = (
+        db.session.query(func.coalesce(func.sum(Devlog.seconds_spent), 0))
+        .filter(Devlog.project_id == project_id)
+        .scalar()
+    )
+
+    return jsonify({
+        'project_id': project_id,
+        'seconds_spent': total_seconds
     }), 200
