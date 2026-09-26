@@ -285,4 +285,3 @@ def link_time_project(project_id):
     db.session.commit()
 
     return jsonify({'message': 'time tracking projects linked'}), 200
-
