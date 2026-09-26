@@ -286,23 +286,3 @@ def link_time_project(project_id):
 
     return jsonify({'message': 'time tracking projects linked'}), 200
 
-@project_bp.route('/projects/<int:project_id>/time', methods=['GET'])
-def get_linked_time_projects(project_id):
-    project = Project.query.get(project_id)
-
-    if not project:
-        return jsonify({'error': 'project not found'}), 404
-
-    linked_projects = ProjectTimeTrackingProject.query.filter_by(
-        project_id=project_id
-    ).all()
-
-    return jsonify({
-        'time_tracking_projects': [
-            {
-                'name': linked_project.name,
-                'provider': linked_project.provider
-            }
-            for linked_project in linked_projects
-        ]
-    }), 200
