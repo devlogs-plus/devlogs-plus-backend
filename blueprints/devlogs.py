@@ -175,7 +175,7 @@ def get_feed():
 @devlog_bp.route('/projects/<int:project_id>/seconds-spent', methods=['GET'])
 def get_project_seconds_spent(project_id):
     project = Project.query.get(project_id)
-    if not project_id:
+    if not project:
         return jsonify({'error': 'project not found'}), 404
 
     total_seconds = (
