@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from functools import wraps
+from urllib.parse import quote
 
 from flask import jsonify, current_app
 from flask_login import current_user
@@ -68,3 +69,17 @@ def refresh_wakatime_token(connection):
     connection.expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in)) if expires_in else None
     db.session.commit()
     return new_token
+
+def get_time_since_last_devlog(project_id):
+    latest_devlog = (
+        Devlog.query
+        .filter_by(project_id=project_id)
+        .filter(Devlog.published_at.isnot(None))
+        .order_by(Devlog.published_at.desc())
+        .first()
+    )
+    if latest_devlog:
+        last_published_at = latest_devlog.published_at
+    else:
+        last_published_at = None
+    return last_published_at
