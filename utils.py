@@ -109,6 +109,45 @@ def get_wakatime_time_since(time, project):
 
     return total_seconds
 
+def get_hackatime_time_since(time, project):
+    if not current_user.is_authenticated:
+        raise RuntimeError('you must be signed in')
+
+    connection = TimeTrackingConnection.query.filter_by(
+        user_id=current_user.id,
+        provider='hackatime'
+    ).first()
+    if connection is None:
+        raise RuntimeError('no hackatime connect found')
+
+    response = oauth.hackatime.get(
+        'users/current/summaries',
+        token={'access_token': connection.access_token},
+        params={
+            'start': time.date().isoformat(),
+            'project': project
+        },
+        timeout=10
+    )
+    response.raise_for_status()
+
+    summaries = response.json().get('data')
+    if not isinstance(summaries, list):
+        raise ValueError('hackatime returned an invalid summaries response')
+
+    total_seconds = 0
+    for summary in summaries:
+        projects = summary.get('projects')
+        if not isinstance(projects, list):
+            raise ValueError('hackatime returned an invalid project summary')
+        total_seconds += sum(
+            item['total_seconds']
+            for item in projects
+            if item.get('name') == project
+        )
+
+    return total_seconds
+
 def get_time_since_last_devlog(project_id):
     latest_devlog = (
         Devlog.query
