@@ -9,7 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 
 from extensions import db
 
-from models import ProjectCollaborator, Project, Devlog
+from models import ProjectCollaborator, Project, Devlog, TimeTrackingConnection
 from oauth import oauth
 
 
@@ -69,6 +69,45 @@ def refresh_wakatime_token(connection):
     connection.expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in)) if expires_in else None
     db.session.commit()
     return new_token
+
+def get_wakatime_time_since(time, project):
+    if not current_user.is_authenticated:
+        raise RuntimeError('a signed-in user is required to query WakaTime')
+
+    connection = TimeTrackingConnection.query.filter_by(
+        user_id=current_user.id,
+        provider='wakatime'
+    ).first()
+    if connection is None:
+        raise RuntimeError('no WakaTime connection found for the current user')
+
+    response = oauth.wakatime.get(
+        'users/current/summaries',
+        token={'access_token': connection.access_token},
+        params={
+            'start': time.date().isoformat(),
+            'project': project
+        },
+        timeout=10
+    )
+    response.raise_for_status()
+
+    summaries = response.json().get('data')
+    if not isinstance(summaries, list):
+        raise ValueError('WakaTime returned an invalid summaries response')
+
+    total_seconds = 0
+    for summary in summaries:
+        projects = summary.get('projects')
+        if not isinstance(projects, list):
+            raise ValueError('WakaTime returned an invalid project summary')
+        total_seconds += sum(
+            item['total_seconds']
+            for item in projects
+            if item.get('name') == project
+        )
+
+    return total_seconds
 
 def get_time_since_last_devlog(project_id):
     latest_devlog = (
