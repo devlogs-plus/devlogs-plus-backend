@@ -86,6 +86,7 @@ def get_wakatime_time_since(time, project):
         token={'access_token': connection.access_token},
         params={
             'start': time.date().isoformat(),
+            'end': datetime.utcnow().date().isoformat(),
             'project': project
         },
         timeout=10
@@ -98,9 +99,15 @@ def get_wakatime_time_since(time, project):
 
     total_seconds = 0
     for summary in summaries:
+        if not isinstance(summary, dict):
+            raise ValueError('WakaTime returned an invalid summary')
+
         projects = summary.get('projects')
+        if projects is None:
+            continue
         if not isinstance(projects, list):
             raise ValueError('WakaTime returned an invalid project summary')
+
         total_seconds += sum(
             item['total_seconds']
             for item in projects
@@ -125,6 +132,7 @@ def get_hackatime_time_since(time, project):
         token={'access_token': connection.access_token},
         params={
             'start': time.date().isoformat(),
+            'end': datetime.utcnow().date().isoformat(),
             'project': project
         },
         timeout=10
