@@ -10,6 +10,8 @@ from config import Config
 from models import User
 from oauth import init_oauth
 
+migrate = Migrate()
+
 def make_deleted_user():
     deleted_user_exists = User.query.get(0) is not None
     if not deleted_user_exists:
@@ -39,7 +41,6 @@ def create_app():
     app.config['WAKATIME_CLIENT_ID'] = os.environ.get('WAKATIME_CLIENT_ID')
     app.config['WAKATIME_CLIENT_SECRET'] = os.environ.get('WAKATIME_CLIENT_SECRET')
     app.config['RESEND_API_KEY'] = os.environ.get('RESEND_API_KEY')
-    migrate = Migrate()
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -51,9 +52,13 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            return User.query.get(int(user_id))
+            return db.session.get(User, int(user_id))
         except (TypeError, ValueError):
             return None
+
+    @app.cli.command("seed-deleted-user")
+    def seed_deleted_user():
+        make_deleted_user()
 
     from blueprints.auth import auth_bp
     app.register_blueprint(auth_bp)
@@ -61,9 +66,6 @@ def create_app():
     app.register_blueprint(project_bp)
     from blueprints.devlogs import devlog_bp
     app.register_blueprint(devlog_bp)
-
-    with app.app_context():
-        make_deleted_user()
 
     return app
 
