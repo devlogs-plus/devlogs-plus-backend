@@ -185,7 +185,7 @@ def get_time_since_last_devlog(project_id):
     return last_published_at
 
 def get_users_hackatime_info(user_id):
-    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id, provider='hackatime').first()
     if not connection:
         return None
     hackatime_user_id = connection.provider_user_id
@@ -194,7 +194,7 @@ def get_users_hackatime_info(user_id):
     return hackatime_user_id, hackatime_api_key
 
 def set_hackatime_user_id(user_id):
-    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id, provider='hackatime').first()
 
     response = requests.get(
         "https://hackatime.hackclub.com/api/v1/authenticated/me",
@@ -208,7 +208,7 @@ def set_hackatime_user_id(user_id):
     db.session.commit()
 
 def set_hackatime_api_key(user_id):
-    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id, provider='hackatime').first()
 
     response = requests.get(
         "https://hackatime.hackclub.com/api/v1/authenticated/api_keys",
