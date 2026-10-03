@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(100))
     avatar_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    hackatime_api_key = db.Column(db.String(255))
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
