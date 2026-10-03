@@ -647,3 +647,23 @@ def is_hackatime_connected():
     if connection is None:
         return jsonify({'message': 'no connection for hackatime found'}), 404
     return jsonify({'message': 'a connection for hackatime found'}), 200
+
+@auth_bp.route('/auth/hackatime/info', methods=['GET'])
+@login_required
+def get_hackatime_user_info():
+    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='hackatime').first()
+    if connection is None:
+        return jsonify({'error': 'hackatime account not connected'}), 404
+
+    response = requests.get(
+        'https://hackatime.hackclub.com/api/v1/authenticated/me',
+        headers={'Authorization': f'Bearer {connection.access_token}'},
+        timeout=10
+    )
+
+    if response.status_code == 401:
+        return jsonify({'error': 'hackatime token is invalid, please sign in to hakatime again'}), 401
+    if not response.ok:
+        return jsonify({'error': 'failed to get hackatime user info'}), 502
+
+    return jsonify(response.json()["id"]), 200
