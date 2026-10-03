@@ -10,7 +10,7 @@ from itsdangerous import URLSafeTimedSerializer
 
 from extensions import db
 
-from models import ProjectCollaborator, Project, Devlog, TimeTrackingConnection
+from models import ProjectCollaborator, Project, Devlog, TimeTrackingConnection, User
 from oauth import oauth
 
 
@@ -175,3 +175,12 @@ def get_time_since_last_devlog(project_id):
     else:
         last_published_at = None
     return last_published_at
+
+def get_users_hackatime_info(user_id):
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+    if not connection:
+        return None
+    hackatime_user_id = connection.provider_user_id
+    hackatime_api_key = connection.provider_api_key
+
+    return hackatime_user_id, hackatime_api_key
