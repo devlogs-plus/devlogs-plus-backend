@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from functools import wraps
+from multiprocessing import connection
 from urllib.parse import quote
 
 import requests
@@ -197,4 +198,18 @@ def set_hackatime_user_id(user_id):
     )
 
     connection.provider_user_id = str(response.json()["id"])
+    db.session.commit()
+
+def set_hackatime_api_key(user_id):
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+
+    response = requests.get(
+        "https://hackatime.hackclub.com/api/v1/authenticated/api_keys",
+        headers={
+            "Authorization": f"Bearer {connection.access_token}"
+        },
+        timeout=10
+    )
+
+    connection.provider_api_key = str(response.json()["token"])
     db.session.commit()
