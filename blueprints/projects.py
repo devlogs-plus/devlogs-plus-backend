@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 
 from extensions import db
 from models import Project, ProjectCollaborator, TimeTrackingConnection, ProjectTimeTrackingProject
+from utils import get_time_since_last_devlog, get_hackatime_time_since, get_wakatime_time_since
 
 project_bp = Blueprint('project_bp', __name__)
 
@@ -22,8 +23,17 @@ def get_projects():
                 'demo_url': project.demo_url,
                 'repo_url': project.repo_url,
                 'created_at': project.created_at,
-                'updated_at': project.updated_at
-            }
+                'updated_at': project.updated_at,
+                'time_tracking_projects': [
+                        {
+                            'id': time_project.id,
+                            'name': time_project.name,
+                            'provider': time_project.provider,
+                            'created_at': time_project.created_at
+                        }
+                        for time_project in project.time_tracking_projects
+                    ]
+                }
             for project in projects
         ]
     }), 200
@@ -90,7 +100,16 @@ def view_users_projects(user_id):
                 'demo_url': project.demo_url,
                 'repo_url': project.repo_url,
                 'created_at': project.created_at,
-                'updated_at': project.updated_at
+                'updated_at': project.updated_at,
+                'time_tracking_projects': [
+                        {
+                            'id': time_project.id,
+                            'name': time_project.name,
+                            'provider': time_project.provider,
+                            'created_at': time_project.created_at
+                        }
+                        for time_project in project.time_tracking_projects
+                    ]
             }
             for project in projects
         ]
@@ -285,3 +304,27 @@ def link_time_project(project_id):
     db.session.commit()
 
     return jsonify({'message': 'time tracking projects linked'}), 200
+
+@project_bp.route('/projects/<int:project_id>/time-since-last-devlog', methods=['GET'])
+@login_required
+def get_time_since_last_devlog_route(project_id):
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({'error': 'project not found'}), 404
+    if project.owner_user_id != current_user.id:
+        return jsonify({'error': 'current user does not own project'}), 403
+
+    last_devlog_time = (get_time_since_last_devlog(project_id=project_id) or project.created_at)
+    total_seconds = 0
+    for time_project in project.time_tracking_projects:
+        if time_project.provider == "hackatime":
+            total_seconds += int(get_hackatime_time_since(last_devlog_time, time_project.name))
+        elif time_project.provider == "wakatime":
+            total_seconds += int(get_wakatime_time_since(last_devlog_time, time_project.name))
+        else:
+            total_seconds += 0
+
+    return jsonify({
+        'project_id': project_id,
+        'total': total_seconds
+    }), 200

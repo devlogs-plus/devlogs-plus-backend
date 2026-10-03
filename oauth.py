@@ -26,7 +26,7 @@ def init_oauth(app):
         client_secret=app.config['HACKATIME_CLIENT_SECRET'],
         authorize_url='https://hackatime.hackclub.com/oauth/authorize',
         access_token_url='https://hackatime.hackclub.com/oauth/token',
-        api_base_url='https://hackatime.hackclub.com/api',
+        api_base_url='https://hackatime.hackclub.com/api/hackatime/v1/',
         client_kwargs={'scope': 'profile read'}
     )
     oauth.register(

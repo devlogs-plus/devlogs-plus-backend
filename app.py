@@ -3,11 +3,14 @@ import secrets
 
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 from extensions import db, login_manager, bcrypt
 from config import Config
 from models import User
 from oauth import init_oauth
+
+migrate = Migrate()
 
 def make_deleted_user():
     deleted_user_exists = User.query.get(0) is not None
@@ -40,6 +43,7 @@ def create_app():
     app.config['RESEND_API_KEY'] = os.environ.get('RESEND_API_KEY')
 
     db.init_app(app)
+    migrate.init_app(app, db)
     init_oauth(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
@@ -48,9 +52,13 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            return User.query.get(int(user_id))
+            return db.session.get(User, int(user_id))
         except (TypeError, ValueError):
             return None
+
+    @app.cli.command("seed-deleted-user")
+    def seed_deleted_user():
+        make_deleted_user()
 
     from blueprints.auth import auth_bp
     app.register_blueprint(auth_bp)
@@ -58,10 +66,6 @@ def create_app():
     app.register_blueprint(project_bp)
     from blueprints.devlogs import devlog_bp
     app.register_blueprint(devlog_bp)
-
-    with app.app_context():
-        db.create_all()
-        make_deleted_user()
 
     return app
 

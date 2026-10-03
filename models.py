@@ -24,6 +24,7 @@ class TimeTrackingConnection(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     provider = db.Column(db.String(50), nullable=False)
     provider_user_id = db.Column(db.String(200))
+    provider_api_key = db.Column(db.String(200))
     access_token = db.Column(db.Text, nullable=False)
     refresh_token = db.Column(db.Text)
     token_type = db.Column(db.String(50), default='Bearer')

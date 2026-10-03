@@ -15,7 +15,7 @@ from models import User, TimeTrackingConnection
 from extensions import db
 from oauth import oauth
 from render_functions import send_reset_email
-from utils import anonymize_and_delete_user, generate_verification_code
+from utils import anonymize_and_delete_user, generate_verification_code, set_hackatime_user_id, set_hackatime_api_key
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -495,6 +495,9 @@ def hackatime_connect_callback():
 
     db.session.commit()
 
+    set_hackatime_user_id(current_user.id)
+    set_hackatime_api_key(current_user.id)
+
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
 @auth_bp.route('/auth/hackatime/disconnect', methods=['GET'])
@@ -647,3 +650,23 @@ def is_hackatime_connected():
     if connection is None:
         return jsonify({'message': 'no connection for hackatime found'}), 404
     return jsonify({'message': 'a connection for hackatime found'}), 200
+
+@auth_bp.route('/auth/hackatime/info', methods=['GET'])
+@login_required
+def get_hackatime_user_info():
+    connection = TimeTrackingConnection.query.filter_by(user_id=current_user.id, provider='hackatime').first()
+    if connection is None:
+        return jsonify({'error': 'hackatime account not connected'}), 404
+
+    response = requests.get(
+        'https://hackatime.hackclub.com/api/v1/authenticated/me',
+        headers={'Authorization': f'Bearer {connection.access_token}'},
+        timeout=10
+    )
+
+    if response.status_code == 401:
+        return jsonify({'error': 'hackatime token is invalid, please sign in to hakatime again'}), 401
+    if not response.ok:
+        return jsonify({'error': 'failed to get hackatime user info'}), 502
+
+    return jsonify(response.json()["id"]), 200
