@@ -3,6 +3,7 @@ import secrets
 
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 from extensions import db, login_manager, bcrypt
 from config import Config
@@ -38,8 +39,10 @@ def create_app():
     app.config['WAKATIME_CLIENT_ID'] = os.environ.get('WAKATIME_CLIENT_ID')
     app.config['WAKATIME_CLIENT_SECRET'] = os.environ.get('WAKATIME_CLIENT_SECRET')
     app.config['RESEND_API_KEY'] = os.environ.get('RESEND_API_KEY')
+    migrate = Migrate()
 
     db.init_app(app)
+    migrate.init_app(app, db)
     init_oauth(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
@@ -60,7 +63,6 @@ def create_app():
     app.register_blueprint(devlog_bp)
 
     with app.app_context():
-        db.create_all()
         make_deleted_user()
 
     return app
