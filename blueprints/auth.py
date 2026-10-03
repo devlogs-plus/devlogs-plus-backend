@@ -15,7 +15,7 @@ from models import User, TimeTrackingConnection
 from extensions import db
 from oauth import oauth
 from render_functions import send_reset_email
-from utils import anonymize_and_delete_user, generate_verification_code
+from utils import anonymize_and_delete_user, generate_verification_code, set_hackatime_user_id, set_hackatime_api_key
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -494,6 +494,9 @@ def hackatime_connect_callback():
     connection.expires_at = expires_at
 
     db.session.commit()
+
+    set_hackatime_user_id(current_user.id)
+    set_hackatime_api_key(current_user.id)
 
     return redirect(os.environ.get('FRONTEND_URL', 'https://localhost:5173')+"/me")
 
