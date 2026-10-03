@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import quote
 
+import requests
 from flask import jsonify, current_app
 from flask_login import current_user
 from flask_sqlalchemy.model import Model
@@ -126,16 +127,15 @@ def get_hackatime_time_since(time, project):
     ).first()
     if connection is None:
         raise RuntimeError('no hackatime connect found')
-
-    response = oauth.hackatime.get(
-        'users/current/summaries',
-        token={'access_token': connection.access_token},
+    response = requests.get(
+        'https://hackatime.hackclub.com/api/hackatime/v1/users/595/summaries',
+        headers={'Authorization': f'Bearer users api key goes here'},
+        timeout=10,
         params={
             'start': time.date().isoformat(),
             'end': datetime.utcnow().date().isoformat(),
-            'project': project
-        },
-        timeout=10
+            'project': project,
+        }
     )
     response.raise_for_status()
 
@@ -145,9 +145,15 @@ def get_hackatime_time_since(time, project):
 
     total_seconds = 0
     for summary in summaries:
+        if not isinstance(summary, dict):
+            raise ValueError('WakaTime returned an invalid summary')
+
         projects = summary.get('projects')
+        if projects is None:
+            continue
         if not isinstance(projects, list):
-            raise ValueError('hackatime returned an invalid project summary')
+            raise ValueError('WakaTime returned an invalid project summary')
+
         total_seconds += sum(
             item['total_seconds']
             for item in projects
