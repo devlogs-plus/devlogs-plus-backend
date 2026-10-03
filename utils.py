@@ -128,9 +128,16 @@ def get_hackatime_time_since(time, project):
     ).first()
     if connection is None:
         raise RuntimeError('no hackatime connect found')
+
+    hackatime_info = get_users_hackatime_info(current_user.id)
+    if hackatime_info is None:
+        raise RuntimeError('no hackatime user info found')
+
+    hackatime_user_id, hackatime_api_key = hackatime_info
+
     response = requests.get(
-        'https://hackatime.hackclub.com/api/hackatime/v1/users/595/summaries',
-        headers={'Authorization': f'Bearer users api key goes here'},
+        f'https://hackatime.hackclub.com/api/hackatime/v1/users/{hackatime_user_id}/summaries',
+        headers={'Authorization': f'Bearer {hackatime_api_key}'},
         timeout=10,
         params={
             'start': time.date().isoformat(),
