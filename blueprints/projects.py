@@ -314,7 +314,7 @@ def get_time_since_last_devlog_route(project_id):
     if project.owner_user_id != current_user.id:
         return jsonify({'error': 'current user does not own project'}), 403
 
-    last_devlog_time = (get_time_since_last_devlog(project_id=project_id) or project.created_at)
+    last_devlog_time = get_time_since_last_devlog(project_id=project_id)
     total_seconds = 0
     for time_project in project.time_tracking_projects:
         if time_project.provider == "hackatime":

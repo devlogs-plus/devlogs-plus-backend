@@ -179,10 +179,9 @@ def get_time_since_last_devlog(project_id):
         .first()
     )
     if latest_devlog:
-        last_published_at = latest_devlog.published_at
-    else:
-        last_published_at = None
-    return last_published_at
+        return latest_devlog.published_at
+
+    return datetime(1900, 1, 1)
 
 def get_users_hackatime_info(user_id):
     connection = TimeTrackingConnection.query.filter_by(user_id=user_id, provider='hackatime').first()
