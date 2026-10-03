@@ -12,8 +12,6 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(100))
     avatar_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    hackatime_api_key = db.Column(db.String(255))
-    hackatime_user_id = db.Column(db.Integer)
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -26,6 +24,7 @@ class TimeTrackingConnection(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     provider = db.Column(db.String(50), nullable=False)
     provider_user_id = db.Column(db.String(200))
+    provider_api_key = db.Column(db.String(200))
     access_token = db.Column(db.Text, nullable=False)
     refresh_token = db.Column(db.Text)
     token_type = db.Column(db.String(50), default='Bearer')
