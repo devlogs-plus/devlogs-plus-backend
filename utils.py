@@ -184,3 +184,17 @@ def get_users_hackatime_info(user_id):
     hackatime_api_key = connection.provider_api_key
 
     return hackatime_user_id, hackatime_api_key
+
+def set_hackatime_user_id(user_id):
+    connection = TimeTrackingConnection.query.filter_by(user_id=user_id)
+
+    response = requests.get(
+        "https://hackatime.hackclub.com/api/v1/authenticated/me",
+        headers={
+            "Authorization": f"Bearer {connection.access_token}"
+        },
+        timeout=10
+    )
+
+    connection.provider_user_id = str(response.json()["id"])
+    db.session.commit()
