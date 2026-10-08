@@ -3,9 +3,10 @@ from operator import or_
 import requests
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
 from extensions import db
-from models import Project, ProjectCollaborator, TimeTrackingConnection, ProjectTimeTrackingProject
+from models import Project, ProjectCollaborator, TimeTrackingConnection, ProjectTimeTrackingProject, Devlog
 from utils import get_time_since_last_devlog, get_hackatime_time_since, get_wakatime_time_since
 
 project_bp = Blueprint('project_bp', __name__)
@@ -327,4 +328,22 @@ def get_time_since_last_devlog_route(project_id):
     return jsonify({
         'project_id': project_id,
         'total': total_seconds
+    }), 200
+
+
+@project_bp.route('/projects/<int:project_id>/seconds-spent', methods=['GET'])
+def get_project_seconds_spent(project_id):
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify({'error': 'project not found'}), 404
+
+    total_seconds = (
+        db.session.query(func.coalesce(func.sum(Devlog.seconds_spent), 0))
+        .filter(Devlog.project_id == project_id)
+        .scalar()
+    )
+
+    return jsonify({
+        'project_id': project_id,
+        'seconds_spent': total_seconds
     }), 200

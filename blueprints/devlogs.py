@@ -171,20 +171,3 @@ def get_feed():
         'per_page': per_page,
         'devlogs': devlogs
     }), 200
-
-@devlog_bp.route('/projects/<int:project_id>/seconds-spent', methods=['GET'])
-def get_project_seconds_spent(project_id):
-    project = Project.query.get(project_id)
-    if not project:
-        return jsonify({'error': 'project not found'}), 404
-
-    total_seconds = (
-        db.session.query(func.coalesce(func.sum(Devlog.seconds_spent), 0))
-        .filter(Devlog.project_id == project_id)
-        .scalar()
-    )
-
-    return jsonify({
-        'project_id': project_id,
-        'seconds_spent': total_seconds
-    }), 200
