@@ -327,7 +327,7 @@ def get_time_since_last_devlog_route(project_id):
 
     return jsonify({
         'project_id': project_id,
-        'total': total_seconds
+        'total_time': total_seconds
     }), 200
 
 
