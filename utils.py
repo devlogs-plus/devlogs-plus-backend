@@ -171,6 +171,10 @@ def get_hackatime_time_since(time, project):
     return total_seconds
 
 def get_time_since_last_devlog(project_id):
+    project = Project.query.get(project_id)
+    if project is None:
+        raise ValueError(f'project {project_id} not found')
+
     latest_devlog = (
         Devlog.query
         .filter_by(project_id=project_id)
@@ -181,7 +185,7 @@ def get_time_since_last_devlog(project_id):
     if latest_devlog:
         return latest_devlog.published_at
 
-    return datetime(1900, 1, 1)
+    return project.created_at
 
 def get_users_hackatime_info(user_id):
     connection = TimeTrackingConnection.query.filter_by(user_id=user_id, provider='hackatime').first()
