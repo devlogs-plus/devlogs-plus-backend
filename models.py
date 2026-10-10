@@ -83,7 +83,7 @@ class Devlog(db.Model):
     published_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    seconds_spent = db.Column(db.String(500))
+    seconds_spent = db.Column(db.Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
