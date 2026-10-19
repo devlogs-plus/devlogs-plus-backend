@@ -10,6 +10,8 @@ from config import Config
 from models import User
 from oauth import init_oauth
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 migrate = Migrate()
 
 def make_deleted_user():
@@ -27,6 +29,7 @@ def make_deleted_user():
 
 def create_app():
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     app.config.from_object(Config)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SESSION_COOKIE_SECURE'] = True
