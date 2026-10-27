@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: devlogs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devlogs-local}
+      POSTGRES_DB: devlogs
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devlogs -d devlogs"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://devlogs:${POSTGRES_PASSWORD:-devlogs-local}@db:5432/devlogs
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
